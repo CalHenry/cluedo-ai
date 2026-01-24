@@ -1,0 +1,10 @@
+[project]
+name = "ai-cluedo"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "logfire>=4.19.0",
+    "pydantic-ai-slim[openai]>=1.46.0",
+]
