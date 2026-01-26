@@ -1,17 +1,26 @@
 from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIChatModel
-from pydantic_ai.providers.ollama import OllamaProvider
+from pydantic_ai.providers.openai import OpenAIProvider
 
 # 3 agents:
 # - supervisor - he decides, can validate a guess and return the fibnal answer
 # - researcher - he can use the tools to query informations
 # - processor - he processes informations passed by the supervisor
 
+# I use LM studio to be able to use a MLX model with pydantic-ai. LM studio provide a OpenAI compatible API
+# 2 actions to start lm studio (in the terminal):
+# - 'lms server start'
+# To see if the server is running you can do 'curl http://localhost:1234/v1/models'. It should return the list of the downloaded models - can help find the exact name of the model
+# - 'lms load <model_name>'
+# (optional) - 'lms ps' to see the loaded model
 
 # Supervisor Agent - orchestrates workflow
 supervisor_model = OpenAIChatModel(
-    model_name="qwen2.5:3b",
-    provider=OllamaProvider(base_url="http://localhost:11434/v1"),
+    model_name="lfm2.5-1.2b-instruct-mlx",  # model name has to be filled but a the actual string do not matter, only the correct url is required)
+    provider=OpenAIProvider(
+        base_url="http://127.0.0.1:1234/v1",
+        api_key="lm_studio",  # also useless but emphasize we use LM studio
+    ),
 )
 
 supervisor_agent = Agent(
@@ -28,8 +37,11 @@ supervisor_agent = Agent(
 )
 
 research_model = OpenAIChatModel(
-    model_name="qwen2.5:3b",
-    provider=OllamaProvider(base_url="http://localhost:11434/v1"),
+    model_name="lfm2.5-1.2b-instruct-mlx",
+    provider=OpenAIProvider(
+        base_url="http://127.0.0.1:1234/v1",
+        api_key="lm_studio",
+    ),
 )
 
 research_agent = Agent(
@@ -43,13 +55,16 @@ research_agent = Agent(
 )
 
 # Processing Agent - transforms and processes data
-processing_model = OpenAIChatModel(
-    model_name="qwen2.5:3b",
-    provider=OllamaProvider(base_url="http://localhost:11434/v1"),
+process_model = OpenAIChatModel(
+    model_name="lfm2.5-1.2b-instruct-mlx",
+    provider=OpenAIProvider(
+        base_url="http://127.0.0.1:1234/v1",
+        api_key="lm_studio",
+    ),
 )
 
-processing_agent = Agent(
-    processing_model,
+process_agent = Agent(
+    process_model,
     system_prompt="""You are a processing agent specialized in data transformation and formatting.
 
  Your job is to take research findings and process them into useful insights and well-formatted output.""",
