@@ -1,8 +1,6 @@
 import asyncio
-from typing import Literal
 
 import logfire
-from pydantic import BaseModel
 
 from agents import process_agent, research_agent, supervisor_agent
 
@@ -12,21 +10,22 @@ logfire.instrument_pydantic_ai()
 
 async def run_investigation(user_query: str):
     attempts = 0
-    max_attempts = 5
+    max_attempts = 15
     supervisor_memory = []
 
     while attempts < max_attempts:
         attempts += 1
         print(f"\n--- Attempt {attempts}/{max_attempts} ---")
-        print(research_agent.tool)
         # supervisor
         supervisor_response = await supervisor_agent.run(
-            f"""Based on current findings: {supervisor_memory}
+            f"""Current evidence collected: {supervisor_memory}
 
-            Decide the next action:
-            - Ask research agent to gather informations: Specify what to investigate (rooms, suspects, weapons, alibis)
-            - Ask processor agent to process information: Request analysis of current evidence
-            - Submit your answser. You can validate you answser using the validation tool to help you in the investigation.
+
+            What is the next single step ?
+            - request researcher to use a specific tool
+            - ask processor to analyse current evidence
+            - use validation tool to test a theory
+            - submit final answer (only submit if you validated that your answser is correct)
             """
         )
 
@@ -36,17 +35,20 @@ async def run_investigation(user_query: str):
         print(f"Instruction: {decision.instruction}")
 
         if decision.action == "delegate_to_researcher":
+            print("🔵")
             # Pass specific instruction to researcher
             research_findings = await research_agent.run(
                 f"""TASK: {decision.instruction}
 
-                Use the appropriate tools to gather information. Be thorough."""
+                Use the appropriate tool once, report the result, then stop.
+                Do not investigate further."""
             )
             supervisor_memory.append(
                 f"[RESEARCH] {decision.instruction}\nFindings: {research_findings.output}"
             )
 
         elif decision.action == "delegate_to_processor":
+            print("🟣")
             # Pass evidence to processor for analysis
             analysis = await process_agent.run(
                 f"""TASK: {decision.instruction}
@@ -86,7 +88,7 @@ async def run_investigation(user_query: str):
 async def main():
     # Test the multi-agent workflow
     result = await run_investigation(
-        "Investigate the crime of Dr.Black. Make sure to use the actual data from the tools - do not invent any facts. You should validate your hypothesis using the tool validate_solution() before writing the final report."
+        "Investigate the crime of Dr.Black. Ask your agents do perform research and processing tasks. You should validate your hypothesis using the tool validate_solution() before writing the final report."
     )
 
     print("\n" + "=" * 80)

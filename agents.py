@@ -5,7 +5,7 @@ from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
-from tools2 import (
+from tools import (
     check_fingerprints,
     get_crime_scene_details,
     get_forensic_evidence,
@@ -41,7 +41,6 @@ supervisor_model = OpenAIChatModel(
     model_name="lfm2.5-1.2b-instruct-mlx",  # model name has to be filled but the actual name do not matter, only the correct url is required)
     provider=OpenAIProvider(
         base_url="http://127.0.0.1:1234/v1",
-        api_key="lm_studio",  # also useless but emphasize we use LM studio
     ),
 )
 
@@ -53,18 +52,18 @@ class SupervisorDecision(BaseModel):
 
 supervisor_agent = Agent(
     supervisor_model,
-    system_prompt="""You are a supervisor agent that coordinates research and processing tasks.
-You have 2 agents at your service that you have ot delegate tasks to.
-- Researcher agent: Use tools to gather informations.
-- Processer agent: Analyse and synthetize informations. You have to give him the findings reported by the resercher agent.
+    system_prompt="""You are a supervisor coordinating research and processing tasks.
+    You have 2 agents at your service:
+    - Researcher agent: Uses tools to gather raw information
+    - Processor agent: Maintains the case file and tells you what you know and what to investigate next
 
- Your job is to:
- 1. Understand the user's request
- 2. Delegate to the Research Agent for data gathering and analysis
- 3. Then delegate to the Processing Agent for transformation and formatting
- 4. Finally, compile the results into a comprehensive answer
+    YOUR ROLE:
+    - Break down the investigation into small, single-step tasks
+    - move step at a time, start by gathering the suspect, weapon and rooms lists
+    - Build understanding incrementally by asking simple requests to your agents
+    - Give one clear instruction at a time to your agents
+    - Wait for their response before deciding next step
 
- Be clear and concise in your delegation. The agents are not tools.
  """,
     output_type=SupervisorDecision,
     tools=[validate_solution, get_tool_list],
@@ -74,16 +73,21 @@ research_model = OpenAIChatModel(
     model_name="lfm2.5-1.2b-instruct-mlx",
     provider=OpenAIProvider(
         base_url="http://127.0.0.1:1234/v1",
-        api_key="lm_studio",
     ),
 )
 
 research_agent = Agent(
     research_model,
-    system_prompt="""You are a research agent specialized in data gathering.
-You are under a supervisor that will tell you what to do. You don't analyse data you just gather it for your supervisor
- You have access to tools to gather data.
+    system_prompt="""You are a research agent that executes exact instructions.
+    STRICT RULES:
+    1. Do ONLY what the supervisor explicitly requests
+    2. Make EXACTLY ONE tool call per task
+    3. Report only the direct result - no interpretation
+    4. Keep responses under 3 sentences
+    5. Do NOT chain multiple investigations
+    6. Do NOT make assumptions about what else to check
 """,
+    model_settings={"temperature": 0.0},
     tools=[
         get_room_names,
         get_suspet_names,
@@ -102,13 +106,37 @@ process_model = OpenAIChatModel(
     model_name="lfm2.5-1.2b-instruct-mlx",
     provider=OpenAIProvider(
         base_url="http://127.0.0.1:1234/v1",
-        api_key="lm_studio",
     ),
 )
 
 process_agent = Agent(
     process_model,
-    system_prompt="""You are a processing agent specialized in data transformation and formatting.
+    system_prompt="""You are the case file manager and reasoning agent.
 
- Your job is to take research findings and process them into useful insights and well-formatted output.""",
+    YOUR JOB:
+    Maintain a running case file with three sections:
+    - WEAPON: [what we know / still unknown]
+    - SUSPECT: [what we know / still unknown]
+    - ROOM: [what we know / still unknown]
+
+    When supervisor sends you new information:
+    1. Update the relevant section of the case file
+    2. If information confirms something (e.g., "this is the crime scene"), mark it as CONFIRMED
+    3. State what we still need to learn
+
+    When supervisor asks "what should we investigate next?":
+    - Recommend ONE specific action based on what's still unknown
+
+    When supervisor asks for "final solution":
+    - Only provide if all three elements are CONFIRMED
+    - Otherwise say "Not enough evidence yet, we need: [specific gaps]"
+
+    FORMAT YOUR RESPONSES:
+    CASE FILE:
+    - Weapon: [status]
+    - Suspect: [status]
+    - Room: [status]
+
+    NEXT ACTION: [specific recommendation]""",
+    model_settings={"temperature": 0.0},
 )

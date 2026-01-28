@@ -437,25 +437,8 @@ def validate_solution(suspect: str, weapon: str, location: str) -> dict:
         "correct_location": location == game_engine.scenario.murder_location,
         "feedback": "Case solved! Excellent detective work."
         if correct
-        else "Not quite right. Keep investigating.",
+        else "Not quite right. Keep investigating with the help of your agents",
     }
-
-
-def get_tool_list2() -> str:
-    """Return the list of all the tools and their purposes"""
-    return """
-    get_room_names() - Return the rooms names in a list
-    get_suspect_names() - Return the suspect names in a list
-    get_weapons_names() - Return the weapons names in a list
-    get_crime_scene_details(room_name: str) - Examine a specific room for evidence and details about the crime scene
-    get_witness_statement(witness_name: str) - Retrieve the statement from a witness/suspect
-    get_forensic_evidence(evidence_id: str) - Retrieve detailed forensic analysis of a specific piece of evidence
-    get_suspect_background(suspect_name: str) - Get background information about a suspect
-    get_timeline_entry(time_slot: str) - Get events that occurred during a specific time window on the night of the murder
-    check_fingerprints(object_name: str) - Check fingerprint analysis for a specific object or evidence item
-    verify_alibi(suspect_name: str, time_slot: str) - Cross-reference a suspect's alibi against timeline and evidence
-    validate_solution(suspect: str, weapon: str, location: str) - Tool for supervisor to check if the case is solved
-    """
 
 
 def get_tool_list() -> str:
@@ -484,6 +467,3 @@ def get_tool_list() -> str:
         tool_list.append(f"{name}{signature} - {purpose}")
 
     return "\n    ".join(tool_list)
-
-
-print(get_tool_list2())
