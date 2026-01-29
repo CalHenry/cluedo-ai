@@ -21,7 +21,7 @@ Folder structure:
 ├── agents.py        <- model and agents set up, system prompts
 ├── game_engine.py   <- game related objects and pre-made reports
 ├── main.py          <- logfire setup and execution function and logic, orchestration and user prompts
-├── tools.py         <- just the tools
+└── tools.py         <- just the tools
 ```
 
 ### The game:  
@@ -40,16 +40,16 @@ All the other tools are for the researcher to use and are simple functions that 
 
 <details>
 <summary>List of researcher's tools:</summary>
-- get_room_names()
-- get_suspect_names()
-- get_weapons_names()
-- get_crime_scene_details(room_name)
-- get_witness_statement(witness_name)
-- get_forensic_evidence(evidence_id)
-- get_suspect_background(suspect_name)
-- get_timeline_entry(time_slot)
-- check_fingerprints(object_name)
-- verify_alibi(suspect_name, time_slot)
+- get_room_names() <br>
+- get_suspect_names() <br>
+- get_weapons_names() <br>
+- get_crime_scene_details(room_name) <br>
+- get_witness_statement(witness_name) <br>
+- get_forensic_evidence(evidence_id) <br>
+- get_suspect_background(suspect_name) <br>
+- get_timeline_entry(time_slot) <br>
+- check_fingerprints(object_name) <br>
+- verify_alibi(suspect_name, time_slot) <br>
 </details>
 
 ### Agents and model:
@@ -60,14 +60,13 @@ Pros:
 - Makes me work a lot on the prompts (and understand a lot about prompt engineering)  
 
 Cons:  
-- Models are stupid. They pass next too very obvious information, they don't weight the different information enough.  
-(for example, at the end of the murder room description, there is "⚠️  THIS IS THE MURDER SCENE", but it doesn't strike the ai whatsoever)
+- Models are stupid. They pass next to very obvious information, they don't weight the different information enough (for example, at the end of the murder room description, there is "⚠️  THIS IS THE MURDER SCENE", but it doesn't strike the ai whatsoever)
 - Supervisor is not very confident and stop the investigation for no expressed reasons, despite it not being over. It feels like he's bored.
 
 Some of the issues related to the small sizes of the model should be manageable with better prompts. I may try a bigger model for the supervisor
 
 ### Current state of the project:
-The game works, the agents interact with each other but don't solve the case yet. I consider to have done reached half the objectives:
+The game works, the agents interact with each other but don't solve the case yet. I consider to have reached my goal:
 - I got a playground for ai to interact with each others.  
 - The supervisor is never using the processor to work on the information passed by the researcher (better prompt should solve this)
 - I don't really manage and built the context, currently it's just under a variable 'supervisor_memory'  
@@ -75,10 +74,9 @@ The game works, the agents interact with each other but don't solve the case yet
 - A game that don't fail early usually takes 7–10 iterations.
 - A game of 7 iterations is < 2 seconds of total runtime
 
-
 ### Personal observations:
 
 - I imagined that the cooperation and interactions between the agents would work out of the box (it doesn't)
-- I expected the agents to understand who they were in the context of the investigation
+- I expected the agents to understand who they were in the context of the investigation.
 - I didn't expect the prompts to have such and influence on the behaviors of the agents (for example, the supervisor output is structured and validated. With a prompt with an action verb and one of the possible values (like 'delegate_researcher') for his answer, the supervisor would try to use 'delegate_researcher' as a tool, despite this tool not existing)
 - Using AI to create the fake reports for the game was very handy
