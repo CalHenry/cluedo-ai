@@ -1,10 +1,29 @@
 import inspect
 import random
 
+from pydantic import BaseModel
+from pydantic_ai.agent import RunContext
+
 from game_engine import CluedoGameEngine
 
 game_engine = CluedoGameEngine(seed=42)
 scenario = game_engine.generate_scenario()
+
+
+class SupervisorContext(BaseModel):
+    gathered_info: str
+
+
+async def process_info(ctx: RunContext[SupervisorContext]) -> str:
+    """Process the last response of the researcher. Return information passed processed and synthetized"""
+    from agents import process_agent
+
+    print("🟣")
+    r = await process_agent.run(
+        f"Information to process: {ctx.deps.gathered_info}",
+        usage=ctx.usage,
+    )
+    return r.output
 
 
 def get_room_names() -> str:

@@ -6,6 +6,7 @@ from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
 from tools import (
+    SupervisorContext,
     check_fingerprints,
     get_crime_scene_details,
     get_forensic_evidence,
@@ -16,6 +17,7 @@ from tools import (
     get_tool_list,
     get_weapons_names,
     get_witness_statement,
+    process_info,
     validate_solution,
     verify_alibi,
 )
@@ -46,27 +48,28 @@ supervisor_model = OpenAIChatModel(
 
 
 class SupervisorDecision(BaseModel):
-    action: Literal["delegate_to_researcher", "delegate_to_processor", "submit_answer"]
+    action: Literal["delegate_to_researcher", "submit_answer"]
     instruction: str
 
 
 supervisor_agent = Agent(
     supervisor_model,
     system_prompt="""You are a supervisor coordinating research and processing tasks.
-    You have 2 agents at your service:
-    - Researcher agent: Uses tools to gather raw information
-    - Processor agent: Maintains the case file and tells you what you know and what to investigate next
+    You have researcher at your service. You have to ask him to use tools to gether informations
+    Your information can be processed using 'process_info'
 
     YOUR ROLE:
     - Break down the investigation into small, single-step tasks
     - move step at a time, start by gathering the suspect, weapon and rooms lists
     - Build understanding incrementally by asking simple requests to your agents
-    - Give one clear instruction at a time to your agents
-    - Wait for their response before deciding next step
+    - Give one clear instruction at a time to your agent
 
+    Use the validation tool to test you hypothesis.
+    Only submit the answer when you are sure about your hypothesis
  """,
+    deps_type=SupervisorContext,
     output_type=SupervisorDecision,
-    tools=[validate_solution, get_tool_list],
+    tools=[validate_solution, get_tool_list, process_info],
 )
 
 research_model = OpenAIChatModel(
@@ -111,32 +114,9 @@ process_model = OpenAIChatModel(
 
 process_agent = Agent(
     process_model,
-    system_prompt="""You are the case file manager and reasoning agent.
-
-    YOUR JOB:
-    Maintain a running case file with three sections:
-    - WEAPON: [what we know / still unknown]
-    - SUSPECT: [what we know / still unknown]
-    - ROOM: [what we know / still unknown]
-
-    When supervisor sends you new information:
-    1. Update the relevant section of the case file
-    2. If information confirms something (e.g., "this is the crime scene"), mark it as CONFIRMED
-    3. State what we still need to learn
-
-    When supervisor asks "what should we investigate next?":
-    - Recommend ONE specific action based on what's still unknown
-
-    When supervisor asks for "final solution":
-    - Only provide if all three elements are CONFIRMED
-    - Otherwise say "Not enough evidence yet, we need: [specific gaps]"
-
-    FORMAT YOUR RESPONSES:
-    CASE FILE:
-    - Weapon: [status]
-    - Suspect: [status]
-    - Room: [status]
-
-    NEXT ACTION: [specific recommendation]""",
+    system_prompt="""Process the information passed to you.
+    Synthetize it, highlight the most important point.
+    Keep it concise
+    DO NOT give instructions or recommendations, you only process""",
     model_settings={"temperature": 0.0},
 )

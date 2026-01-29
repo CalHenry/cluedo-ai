@@ -3,7 +3,12 @@ from typing import cast
 
 import logfire
 
-from agents import SupervisorDecision, process_agent, research_agent, supervisor_agent
+from agents import (
+    SupervisorContext,
+    SupervisorDecision,
+    research_agent,
+    supervisor_agent,
+)
 
 logfire.configure()
 logfire.instrument_pydantic_ai()
@@ -13,6 +18,7 @@ async def run_investigation(user_query: str):
     attempts = 0
     max_attempts = 15
     supervisor_memory = []
+    research_findings_text = ""
 
     while attempts < max_attempts:
         attempts += 1
@@ -26,7 +32,8 @@ async def run_investigation(user_query: str):
             - ask processor to analyse current evidence
             - use validation tool to test a theory
             - submit final answer (only submit if you validated that your answser is correct)
-            """
+            """,
+            deps=SupervisorContext(gathered_info=research_findings_text),
         )
 
         decision = cast(
@@ -45,23 +52,9 @@ async def run_investigation(user_query: str):
                 Use the appropriate tool once, report the result, then stop.
                 Do not investigate further."""
             )
+            research_findings_text = str(research_findings.output)
             supervisor_memory.append(
-                f"[RESEARCH] {decision.instruction}\nFindings: {research_findings.output}"
-            )
-
-        elif decision.action == "delegate_to_processor":
-            print("🟣")
-            # Pass evidence to processor for analysis
-            analysis = await process_agent.run(
-                f"""TASK: {decision.instruction}
-
-                Evidence collected so far:
-                {chr(10).join(supervisor_memory)}
-
-                Analyze for patterns, inconsistencies, and logical conclusions."""
-            )
-            supervisor_memory.append(
-                f"[ANALYSIS] {decision.instruction}\nConclusion: {analysis.output}"
+                f"[RESEARCH] {decision.instruction}\nFindings: {research_findings_text}"
             )
 
         elif decision.action == "submit_answer":
