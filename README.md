@@ -10,7 +10,7 @@ The design is simple:
 - 3 agents: 1 supervisor, 1 researcher, 1 processor
 - a limited set of tools
 
-#### Stack
+### Stack
 - I use a MLX model for better performance on my mac when running the agents.
 - [pydantic-ai](https://ai.pydantic.dev/) for the agentic framework and [Pydantic's Logfire](https://docs.pydantic.dev/latest/integrations/logfire/) to inspect every interaction between the agents.
 - [LM studio](https://lmstudio.ai/) to be able to use a MLX model locally with pydantic-ai. LM studio emits a OpenAI compatible API for the model that is supported by pydantic-ai. LM studio makes it easy to download and use models from HuggingFace. It also comes as a CLI, once the model is downloaded, the setup takes 2 simple commands (start the server and load the LLM in memory).
@@ -80,3 +80,40 @@ The game works, the agents interact with each other but don't solve the case yet
 - I expected the agents to understand who they were in the context of the investigation.
 - I didn't expect the prompts to have such and influence on the behaviors of the agents (for example, the supervisor output is structured and validated. With a prompt with an action verb and one of the possible values (like 'delegate_researcher') for his answer, the supervisor would try to use 'delegate_researcher' as a tool, despite this tool not existing)
 - Using AI to create the fake reports for the game was very handy
+
+## Try it out yourself
+
+### Requirements
+- Powerfull enough hardware
+- LM studio installed
+- LLM downloaded on disk with LM studio
+- Python >= 3.12
+- logfire>=4.19.0
+- pydantic-ai-slim[openai]>=1.46.0
+
+>[!IMPORTANT] 
+> To use Logfire, you need to create a free account. You can follow the [Getting Started instructions](https://logfire.pydantic.dev/docs/).
+
+1. clone the repo:
+```sh
+git clone https://github.com/CalHenry/cluedo-ai.git
+```
+
+2. Set up LM studio  
+You can do this in the GUI, or in the terminal:  
+- Start the LM studio server. 
+```sh
+lms server start
+```
+Default port is '1234'. (optional) Test it with 'curl http://localhost:1234/v1/models'
+
+- Load the llm(s) in memory
+```sh
+lms load
+```
+You will be prompted with the list of available models and asked to choose the one you want to load. You can also pass the model name as an argument directly
+
+4. From there you can run the main script with python or uv:  
+```sh
+uv run main.py
+```
