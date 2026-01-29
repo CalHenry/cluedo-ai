@@ -18,10 +18,10 @@ The design is simple:
 Folder structure:
 ```sh
 .
-├── agents.py        <- model and agents set up, system prompts
-├── game_engine.py   <- game related objects and pre-made reports
-├── main.py          <- logfire setup and execution function and logic, orchestration and user prompts
-└── tools.py         <- just the tools
+├── agents.py        # <- model and agents set up, system prompts
+├── game_engine.py   # <- game related objects and pre-made reports
+├── main.py          # <- logfire setup and execution function and logic, orchestration and user prompts
+└── tools.py         # <- just the tools
 ```
 
 ### The game:  
