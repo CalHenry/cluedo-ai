@@ -1,0 +1,84 @@
+# Cluedo for AI
+
+This project is a simple version of a Cluedo like game for AI agents to play.  
+The goal is to create a playground for ai agents to interact with each other so I can inspect each interaction from the first user prompt to the final answer of the models.   
+I want to understand better how context is created, managed and relevant in an agentic workflow, so I build this playground where I control each element.  
+
+The design is simple:
+- 100% local
+- no MCP server
+- 3 agents: 1 supervisor, 1 researcher, 1 processor
+- a limited set of tools
+
+#### Stack
+- I use a MLX model for better performance on my mac when running the agents.
+- [pydantic-ai](https://ai.pydantic.dev/) for the agentic framework and [Pydantic's Logfire](https://docs.pydantic.dev/latest/integrations/logfire/) to inspect every interaction between the agents.
+- [LM studio](https://lmstudio.ai/) to be able to use a MLX model locally with pydantic-ai. LM studio emits a OpenAI compatible API for the model that is supported by pydantic-ai. LM studio makes it easy to download and use models from HuggingFace. It also comes as a CLI, once the model is downloaded, the setup takes 2 simple commands (start the server and load the LLM in memory).
+
+Folder structure:
+```sh
+.
+├── agents.py        <- model and agents set up, system prompts
+├── game_engine.py   <- game related objects and pre-made reports
+├── main.py          <- logfire setup and execution function and logic, orchestration and user prompts
+├── tools.py         <- just the tools
+```
+
+### The game:  
+My interest is not how well the ai can solve the case but how much I can make them interact with each other.  
+Therefore, the game is very simple, the tools return small text with obvious information. I introduced enough randomness and variations, so the AI have to use the tools a few times before discovering the key elements.   
+A Cluedo game has 6 suspects, 6 rooms and 6 weapons. Here instead of players we have an AI team investigating the murder of Dr.Black.  
+They can gather information about the suspects, the rooms and the weapons using the tools. Finally, the supervisor can submit and answer to the case by providing a value for room, suspect and weapon. This ends the game regardless of the hypothesis being correct or not.
+
+### Tools:
+Tools are exclusive to the researcher agent or the supervisor.  
+The supervisor can use 2 tools:
+- get the list of tools available in the game (goal is to have the supervisor ask the researcher to use a specific tool)
+- validate a hypothesis by passing a value for room, weapon and suspect. Returns true or false. I expected this tool to be very informative for the supervisor, but I never saw the supervisor analyzing this output or note that he has found the right weapon for example.
+
+All the other tools are for the researcher to use and are simple functions that return text about the suspects, the crime scene, the weapons...  
+
+<details>
+<summary>List of researcher's tools:</summary>
+- get_room_names()
+- get_suspect_names()
+- get_weapons_names()
+- get_crime_scene_details(room_name)
+- get_witness_statement(witness_name)
+- get_forensic_evidence(evidence_id)
+- get_suspect_background(suspect_name)
+- get_timeline_entry(time_slot)
+- check_fingerprints(object_name)
+- verify_alibi(suspect_name, time_slot)
+</details>
+
+### Agents and model:
+I use the same LLM for the 3 agents: [LFM2.5-1.2B-Instruct-4bit](https://huggingface.co/mlx-community/LFM2.5-1.2B-Instruct-4bit).   
+The model is very small and this impacts directly how the agents plays the game, understand their role and follow the instructions.   
+Pros:   
+- Very fast inference, no pressure on the RAM and the hardware handles this very well (M1pro).
+- Makes me work a lot on the prompts (and understand a lot about prompt engineering)  
+
+Cons:  
+- Models are stupid. They pass next too very obvious information, they don't weight the different information enough.  
+(for example, at the end of the murder room description, there is "⚠️  THIS IS THE MURDER SCENE", but it doesn't strike the ai whatsoever)
+- Supervisor is not very confident and stop the investigation for no expressed reasons, despite it not being over. It feels like he's bored.
+
+Some of the issues related to the small sizes of the model should be manageable with better prompts. I may try a bigger model for the supervisor
+
+### Current state of the project:
+The game works, the agents interact with each other but don't solve the case yet. I consider to have done reached half the objectives:
+- I got a playground for ai to interact with each others.  
+- The supervisor is never using the processor to work on the information passed by the researcher (better prompt should solve this)
+- I don't really manage and built the context, currently it's just under a variable 'supervisor_memory'  
+- 3/5 times, the code fails because the supervisor tries to use a tool that doesn't exist.
+- A game that don't fail early usually takes 7–10 iterations.
+- A game of 7 iterations is < 2 seconds of total runtime
+
+
+### Personal observations:
+
+- I imagined that the cooperation and interactions between the agents would work out of the box (it doesn't)
+- I expected the agents to understand who they were in the context of the investigation
+- I didn't expect the prompts to have such and influence on the behaviors of the agents (for example, the supervisor output is structured and validated. With a prompt with an action verb and one of the possible values (like 'delegate_researcher') for his answer, the supervisor would try to use 'delegate_researcher' as a tool, despite this tool not existing)
+- Using AI to create the fake reports for the game was very handy

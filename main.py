@@ -1,8 +1,9 @@
 import asyncio
+from typing import cast
 
 import logfire
 
-from agents import process_agent, research_agent, supervisor_agent
+from agents import SupervisorDecision, process_agent, research_agent, supervisor_agent
 
 logfire.configure()
 logfire.instrument_pydantic_ai()
@@ -20,7 +21,6 @@ async def run_investigation(user_query: str):
         supervisor_response = await supervisor_agent.run(
             f"""Current evidence collected: {supervisor_memory}
 
-
             What is the next single step ?
             - request researcher to use a specific tool
             - ask processor to analyse current evidence
@@ -29,7 +29,9 @@ async def run_investigation(user_query: str):
             """
         )
 
-        decision = supervisor_response.output  # Should be SupervisorDecision object
+        decision = cast(
+            SupervisorDecision, supervisor_response.output
+        )  # Should be SupervisorDecision object. 'cast' is for the type checker
 
         print(f"Supervisor decision: {decision.action}")
         print(f"Instruction: {decision.instruction}")

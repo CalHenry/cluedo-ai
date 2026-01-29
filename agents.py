@@ -11,7 +11,7 @@ from tools import (
     get_forensic_evidence,
     get_room_names,
     get_suspect_background,
-    get_suspet_names,
+    get_suspect_names,
     get_timeline_entry,
     get_tool_list,
     get_weapons_names,
@@ -90,7 +90,7 @@ research_agent = Agent(
     model_settings={"temperature": 0.0},
     tools=[
         get_room_names,
-        get_suspet_names,
+        get_suspect_names,
         get_weapons_names,
         get_crime_scene_details,
         get_witness_statement,

@@ -13,7 +13,7 @@ def get_room_names() -> str:
     return rooms_names
 
 
-def get_suspet_names() -> str:
+def get_suspect_names() -> str:
     """Return the suspect names in a list"""
     suspects_names = ", ".join(game_engine.SUSPECTS)
     return suspects_names
