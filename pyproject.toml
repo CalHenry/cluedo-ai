@@ -1,8 +1,12 @@
 [project]
 name = "ai-cluedo"
 version = "0.1.0"
-description = "Add your description here"
+description = "Local playground for AI agents to play a cluedo like game - Inspect all the interactions with Logfire from Pydantic"
 readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "Calixte Henry", email = "131826512+CalHenry@users.noreply.github.com" }
+]
 requires-python = ">=3.12"
 dependencies = [
     "logfire>=4.19.0",
