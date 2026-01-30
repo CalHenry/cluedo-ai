@@ -32,9 +32,10 @@ They can gather information about the suspects, the rooms and the weapons using 
 
 ### Tools:
 Tools are exclusive to the researcher agent or the supervisor.  
-The supervisor can use 2 tools:
+The supervisor can use 3 tools:
 - get the list of tools available in the game (goal is to have the supervisor ask the researcher to use a specific tool)
-- validate a hypothesis by passing a value for room, weapon and suspect. Returns true or false. I expected this tool to be very informative for the supervisor, but I never saw the supervisor analyzing this output or note that he has found the right weapon for example.
+- validate a hypothesis by passing a value for room, weapon and suspect. Returns true or false. I expected this tool to be very informative for the supervisor, but I never saw the supervisor analyzing this output or note that he has found the right weapon for example
+- process_information: use the processor agent under the hood but the supervisor doesn't know that
 
 All the other tools are for the researcher to use and are simple functions that return text about the suspects, the crime scene, the weapons...  
 
@@ -50,29 +51,33 @@ All the other tools are for the researcher to use and are simple functions that 
 - get_timeline_entry(time_slot) <br>
 - check_fingerprints(object_name) <br>
 - verify_alibi(suspect_name, time_slot) <br>
+- process_information() (processor agent) <br> 
 </details>
 
 ### Agents and model:
-I use the same LLM for the 3 agents: [LFM2.5-1.2B-Instruct-4bit](https://huggingface.co/mlx-community/LFM2.5-1.2B-Instruct-4bit).   
-The model is very small and this impacts directly how the agents plays the game, understand their role and follow the instructions.   
+I use 2 different LLMs: 
+- [Ministral-3-3B-Instruct-2512-4bit](https://huggingface.co/mlx-community/Ministral-3-3B-Instruct-2512-4bit) for the supervisor
+- [LFM2.5-1.2B-Instruct-4bit](https://huggingface.co/mlx-community/LFM2.5-1.2B-Instruct-4bit) for the researcher and the processor
+
+The models are small and this impacts directly how the agents plays the game, understand their role and follow the instructions.   
 Pros:   
 - Very fast inference, no pressure on the RAM and the hardware handles this very well (M1pro).
 - Makes me work a lot on the prompts (and understand a lot about prompt engineering)  
 
 Cons:  
-- Models are stupid. They pass next to very obvious information, they don't weight the different information enough (for example, at the end of the murder room description, there is "⚠️  THIS IS THE MURDER SCENE", but it doesn't strike the ai whatsoever)
-- Supervisor is not very confident and stop the investigation for no expressed reasons, despite it not being over. It feels like he's bored.
+- Models are stupid without prompt engineering. They pass next to very obvious information, they don't weight the different information enough (for example, at the end of the murder room description, there is "⚠️  THIS IS THE MURDER SCENE", but it doesn't strike the ai whatsoever)
 
-Some of the issues related to the small sizes of the model should be manageable with better prompts. I may try a bigger model for the supervisor
+Some of the issues related to the small sizes of the models should be manageable with better prompts.
+
+The processor was previously a standalone agent like the researcher is, but I had a major issue: the supervisor was not using the processor and was asking the researcher to process info.  
+To solve this i included the processor agent inside a tool available to the supervisor only.
 
 ### Current state of the project:
 The game works, the agents interact with each other but don't solve the case yet. I consider to have reached my goal:
 - I got a playground for ai to interact with each others.  
-- The supervisor is never using the processor to work on the information passed by the researcher (better prompt should solve this)
-- I don't really manage and built the context, currently it's just under a variable 'supervisor_memory'  
-- 3/5 times, the code fails because the supervisor tries to use a tool that doesn't exist.
-- A game that don't fail early usually takes 7–10 iterations.
-- A game of 7 iterations is < 2 seconds of total runtime
+- I don't really manage and built the context, currently it's just under a variable 'supervisor_memory' and I never interact with it
+- a run takes ~2 minutes
+- the agents are sometimes successful. They are often close to the right answer (2/3 correct)
 
 ### Personal observations:
 
@@ -81,10 +86,18 @@ The game works, the agents interact with each other but don't solve the case yet
 - I didn't expect the prompts to have such and influence on the behaviors of the agents (for example, the supervisor output is structured and validated. With a prompt with an action verb and one of the possible values (like 'delegate_researcher') for his answer, the supervisor would try to use 'delegate_researcher' as a tool, despite this tool not existing)
 - Using AI to create the fake reports for the game was very handy
 
+### Explore recorded runs 
+In the folder 'run_examples', you can see the logfire logs of a few runs (configured by 'logfire.configure()' line 14 in main.py).  
+I capture this content using the following command:
+```sh
+uv run main.py | tee output.txt # time uv run main.py to see the exec time
+```
+I added circles emojis to easily see when the researcher (🔵) or the processor (🟣) are used by the supervisor.
+
 ## Try it out yourself
 
 ### Requirements
-- Powerfull enough hardware
+- Powerful enough hardware
 - LM studio installed
 - LLM downloaded on disk with LM studio
 - Python >= 3.12
