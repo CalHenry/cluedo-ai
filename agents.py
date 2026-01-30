@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
@@ -27,6 +27,7 @@ from tools import (
 - supervisor: he decides, can validate a guess and return the fibnal answer
 - researcher: he can use the tools to query informations
 - processor: he processes informations passed by the supervisor
+The processor is accessible as a tool by the supervisor that do not know that the processor is in fact an ai.
 
 I use LM studio to be able to use a MLX model with pydantic-ai. LM studio provide a OpenAI compatible API
 2 actions to start lm studio (in the terminal):
@@ -40,7 +41,7 @@ Use the GUI if you're not comfortable with the cli, it can all be done there + h
 
 # Supervisor Agent - orchestrates workflow
 supervisor_model = OpenAIChatModel(
-    model_name="lfm2.5-1.2b-instruct-mlx",  # model name has to be filled but the actual name do not matter, only the correct url is required)
+    model_name="ministral-3-3b-instruct-2512",
     provider=OpenAIProvider(
         base_url="http://127.0.0.1:1234/v1",
     ),
@@ -48,24 +49,50 @@ supervisor_model = OpenAIChatModel(
 
 
 class SupervisorDecision(BaseModel):
-    action: Literal["delegate_to_researcher", "submit_answer"]
-    instruction: str
+    action: Literal["delegate_to_researcher", "submit_answer"] = Field(
+        description="Choose 'delegate_to_researcher' to ask your researcher or 'submit_answer' hen you are sure about your hypothesis"
+    )
+    instruction: str = Field(description="Simple instruction string")
 
 
 supervisor_agent = Agent(
     supervisor_model,
-    system_prompt="""You are a supervisor coordinating research and processing tasks.
-    You have researcher at your service. You have to ask him to use tools to gether informations
-    Your information can be processed using 'process_info'
+    system_prompt="""SUPERVISOR - Cluedo Investigation
 
-    YOUR ROLE:
-    - Break down the investigation into small, single-step tasks
-    - move step at a time, start by gathering the suspect, weapon and rooms lists
-    - Build understanding incrementally by asking simple requests to your agents
-    - Give one clear instruction at a time to your agent
+    You must respond in this format:
+    {
+      "action": "[choose one: delegate_to_researcher OR submit_answer]",
+      "instruction": "[your message]"
+    }
 
-    Use the validation tool to test you hypothesis.
-    Only submit the answer when you are sure about your hypothesis
+    TWO WAYS TO RESPOND:
+
+    OPTION 1 - Ask your researcher to do something:
+    {
+      "action": "delegate_to_researcher",
+      "instruction": "Use list_suspects to get all suspect names"
+    }
+
+    OPTION 2 - Provide final answer:
+    {
+      "action": "submit_answer",
+      "instruction": "Suspect: Scarlet, Weapon: Rope, Room: Kitchen"
+    }
+
+    TOOLS YOU CAN USE DIRECTLY:
+    - process_info(data) - Process information
+    - validate_solution(suspect, weapon, room) - Check if hypothesis is correct
+
+    YOUR WORKFLOW:
+    □ Ask researcher for suspect list (use OPTION 1)
+    □ Ask researcher for weapon list (use OPTION 1)
+    □ Ask researcher for room list (use OPTION 1)
+    □ Ask researcher to gather clues (use OPTION 1, can repeat)
+    □ Call process_info yourself to analyze
+    □ Call validate_solution yourself to test
+    □ Only use OPTION 2 when validation passes
+
+    FIRST RESPONSE: Use OPTION 1 to ask researcher for suspect list.
  """,
     deps_type=SupervisorContext,
     output_type=SupervisorDecision,
