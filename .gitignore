@@ -11,3 +11,6 @@ wheels/
 
 
 working_examples_scripts/
+
+# apple specific
+.DS_Store

@@ -1,11 +1,12 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
 from tools import (
+    SupervisorContext,
     check_fingerprints,
     get_crime_scene_details,
     get_forensic_evidence,
@@ -16,6 +17,7 @@ from tools import (
     get_tool_list,
     get_weapons_names,
     get_witness_statement,
+    process_info,
     validate_solution,
     verify_alibi,
 )
@@ -25,6 +27,7 @@ from tools import (
 - supervisor: he decides, can validate a guess and return the fibnal answer
 - researcher: he can use the tools to query informations
 - processor: he processes informations passed by the supervisor
+The processor is accessible as a tool by the supervisor that do not know that the processor is in fact an ai.
 
 I use LM studio to be able to use a MLX model with pydantic-ai. LM studio provide a OpenAI compatible API
 2 actions to start lm studio (in the terminal):
@@ -38,7 +41,7 @@ Use the GUI if you're not comfortable with the cli, it can all be done there + h
 
 # Supervisor Agent - orchestrates workflow
 supervisor_model = OpenAIChatModel(
-    model_name="lfm2.5-1.2b-instruct-mlx",  # model name has to be filled but the actual name do not matter, only the correct url is required)
+    model_name="ministral-3-3b-instruct-2512",
     provider=OpenAIProvider(
         base_url="http://127.0.0.1:1234/v1",
     ),
@@ -46,27 +49,54 @@ supervisor_model = OpenAIChatModel(
 
 
 class SupervisorDecision(BaseModel):
-    action: Literal["delegate_to_researcher", "delegate_to_processor", "submit_answer"]
-    instruction: str
+    action: Literal["delegate_to_researcher", "submit_answer"] = Field(
+        description="Choose 'delegate_to_researcher' to ask your researcher or 'submit_answer' hen you are sure about your hypothesis"
+    )
+    instruction: str = Field(description="Simple instruction string")
 
 
 supervisor_agent = Agent(
     supervisor_model,
-    system_prompt="""You are a supervisor coordinating research and processing tasks.
-    You have 2 agents at your service:
-    - Researcher agent: Uses tools to gather raw information
-    - Processor agent: Maintains the case file and tells you what you know and what to investigate next
+    system_prompt="""SUPERVISOR - Cluedo Investigation
 
-    YOUR ROLE:
-    - Break down the investigation into small, single-step tasks
-    - move step at a time, start by gathering the suspect, weapon and rooms lists
-    - Build understanding incrementally by asking simple requests to your agents
-    - Give one clear instruction at a time to your agents
-    - Wait for their response before deciding next step
+    You must respond in this format:
+    {
+      "action": "[choose one: delegate_to_researcher OR submit_answer]",
+      "instruction": "[your message]"
+    }
 
+    TWO WAYS TO RESPOND:
+
+    OPTION 1 - Ask your researcher to do something:
+    {
+      "action": "delegate_to_researcher",
+      "instruction": "Use list_suspects to get all suspect names"
+    }
+
+    OPTION 2 - Provide final answer:
+    {
+      "action": "submit_answer",
+      "instruction": "Suspect: Scarlet, Weapon: Rope, Room: Kitchen"
+    }
+
+    TOOLS YOU CAN USE DIRECTLY:
+    - process_info(data) - Process information
+    - validate_solution(suspect, weapon, room) - Check if hypothesis is correct
+
+    YOUR WORKFLOW:
+    □ Ask researcher for suspect list (use OPTION 1)
+    □ Ask researcher for weapon list (use OPTION 1)
+    □ Ask researcher for room list (use OPTION 1)
+    □ Ask researcher to gather clues (use OPTION 1, can repeat)
+    □ Call process_info yourself to analyze
+    □ Call validate_solution yourself to test
+    □ Only use OPTION 2 when validation passes
+
+    FIRST RESPONSE: Use OPTION 1 to ask researcher for suspect list.
  """,
+    deps_type=SupervisorContext,
     output_type=SupervisorDecision,
-    tools=[validate_solution, get_tool_list],
+    tools=[validate_solution, get_tool_list, process_info],
 )
 
 research_model = OpenAIChatModel(
@@ -111,32 +141,9 @@ process_model = OpenAIChatModel(
 
 process_agent = Agent(
     process_model,
-    system_prompt="""You are the case file manager and reasoning agent.
-
-    YOUR JOB:
-    Maintain a running case file with three sections:
-    - WEAPON: [what we know / still unknown]
-    - SUSPECT: [what we know / still unknown]
-    - ROOM: [what we know / still unknown]
-
-    When supervisor sends you new information:
-    1. Update the relevant section of the case file
-    2. If information confirms something (e.g., "this is the crime scene"), mark it as CONFIRMED
-    3. State what we still need to learn
-
-    When supervisor asks "what should we investigate next?":
-    - Recommend ONE specific action based on what's still unknown
-
-    When supervisor asks for "final solution":
-    - Only provide if all three elements are CONFIRMED
-    - Otherwise say "Not enough evidence yet, we need: [specific gaps]"
-
-    FORMAT YOUR RESPONSES:
-    CASE FILE:
-    - Weapon: [status]
-    - Suspect: [status]
-    - Room: [status]
-
-    NEXT ACTION: [specific recommendation]""",
+    system_prompt="""Process the information passed to you.
+    Synthetize it, highlight the most important point.
+    Keep it concise
+    DO NOT give instructions or recommendations, you only process""",
     model_settings={"temperature": 0.0},
 )
