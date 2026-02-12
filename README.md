@@ -1,4 +1,4 @@
-# Cluedo for AI
+# Cluedo for AI 🕵️‍♂️
 
 This project is a simple version of a Cluedo like game for AI agents to play.  
 The goal is to create a playground for ai agents to interact with each other so I can inspect each interaction from the first user prompt to the final answer of the models.   
@@ -100,9 +100,10 @@ I added circles emojis to easily see when the researcher (🔵) or the processor
 - Powerful enough hardware
 - LM studio installed
 - LLM downloaded on disk with LM studio
-- Python >= 3.12
+- Python>=3.12
 - logfire>=4.19.0
 - pydantic-ai-slim[openai]>=1.46.0
+- python-dotenv>=1.2.1
 
 >[!IMPORTANT] 
 > To use Logfire, you need to create a free account. You can follow the [Getting Started instructions](https://logfire.pydantic.dev/docs/).
