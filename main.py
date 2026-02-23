@@ -26,7 +26,7 @@ async def run_investigation(user_query: str):
 
     while attempts < max_attempts:
         attempts += 1
-        print(f"\n--- Attempt {attempts}/{max_attempts} ---")
+        print(f"\n--- Run {attempts}/{max_attempts} ---")
 
         # supervisor
         supervisor_response = await supervisor_agent.run(
