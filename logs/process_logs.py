@@ -20,8 +20,8 @@ Final dataset will have a single row per process_id (investigation)
 
 # 1. Load data
 # Checks if the corresponding dataframe is present in 'processed', if yes ignore the file, if no select it to be processed.
-interim_dir = Path("data/interim")
-processed_dir = Path("data/processed")
+interim_dir = Path("logs/data/interim")
+processed_dir = Path("logs/data/processed")
 
 already_done = {
     p.stem.replace("_processed", "") for p in processed_dir.glob("*_processed.parquet")
@@ -68,7 +68,6 @@ def process(lf: pl.LazyFrame) -> pl.LazyFrame:
     )
 
     # parallel_tool_calls: total tool calls that happen in turns where >1 tool ran
-    # (computed per-turn then summed – we use a sub-aggregation trick via struct)
     # We calculate this from tool_spans separately (see below).
 
     # tool_error_rate (fraction of non-error tool spans, as a percentage)

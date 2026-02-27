@@ -34,6 +34,6 @@ df = pl.read_database(query, conn)
 
 datetime_today = datetime.now().strftime("%Y-%m-%d")
 
-df.write_csv(f"data/df_{datetime_today}.csv")
+df.write_parquet(f"logs/data/raw/log_{datetime_today}.parquet")
 
 conn.close()

@@ -1,12 +1,11 @@
 from typing import Literal
 
-from distro import name
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
-from tools import (
+from src.tools import (
     SupervisorContext,
     check_fingerprints,
     get_crime_scene_details,

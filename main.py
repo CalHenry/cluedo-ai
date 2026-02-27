@@ -4,7 +4,7 @@ from typing import cast
 import logfire
 from pydantic_ai import usage
 
-from agents import (
+from src.agents import (
     SupervisorContext,
     SupervisorDecision,
     research_agent,
