@@ -26,7 +26,7 @@ SELECT process_pid,
     attributes->>'gen_ai.usage.input_tokens' as input_tokens,
     attributes->>'gen_ai.usage.output_tokens' as output_tokens,
     attributes->>'gen_ai.response.finish_reasons' as finish_reason,
-    attributes->>'gen_ai.input.messages' as attributes_messages
+    attributes->>'gen_ai.input.messages' as attribute_messages
 FROM records
 ORDER BY start_timestamp DESC
 """
