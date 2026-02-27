@@ -4,7 +4,7 @@ import polars as pl
 
 """
 This script processes log data for the investigations of 'ai_cluedo'.
-Logs are pulled from Logfire in the script 'get_logfire_logs.py' and placed in the data/ folder.
+Logs are pulled from Logfire in the script 'get_logfire_logs.py' and placed in the data/raw/ folder.
 - 1 investigation is 1 run of main.py.
 - 1 run is n turns to solve the case. A turn is defined in 'main.py::run_investigation'. Number of turns are caped at 15.
 - 1 turn is the supervisor agent deciding to either gather data, process data or submit a solution. This creates a back and forth between the supervisor, the researcher agent and the processor agent. The number of steps in a turn is not set.
@@ -37,7 +37,7 @@ def process(lf: pl.LazyFrame) -> pl.LazyFrame:
     Args:
         lf: input LazyFrame - should be concat log data in parquet format
     """
-    # ── Intermediate lazy frames ───────────────────────────────────────────────────
+    # ── Intermediate lazy frames ─────────────────────────────────────────────────────
     # Last span per turn (trace_id): used for token accounting.
     last_span_per_turn = (
         lf.sort("end_timestamp", descending=False)
@@ -50,7 +50,7 @@ def process(lf: pl.LazyFrame) -> pl.LazyFrame:
         pl.col("message").str.split(": ").list.last().alias("tool_name")
     )
 
-    # ── Expressions evaluated inside group_by("process_pid").agg() ────────────────
+    # ── Expressions evaluated inside group_by("process_pid").agg() ───────────────────
 
     # total_turns: number of distinct trace_ids that contain a supervisor chat span
     total_turns_expr = (
@@ -99,7 +99,7 @@ def process(lf: pl.LazyFrame) -> pl.LazyFrame:
         .alias("final_answer_correct")
     )
 
-    # ── Main aggregation on the full span-level frame ─────────────────────────────
+    # ── Main aggregation on the full span-level frame ────────────────────────────────
 
     base_agg = lf.group_by("process_pid").agg(
         total_turns_expr,
@@ -108,7 +108,7 @@ def process(lf: pl.LazyFrame) -> pl.LazyFrame:
         run_success_expr,
     )
 
-    # ── Token aggregation (from last_span_per_turn) ───────────────────────────────
+    # ── Token aggregation (from last_span_per_turn) ──────────────────────────────────
 
     token_agg = last_span_per_turn.group_by("process_pid").agg(
         pl.col("input_tokens").sum().alias("total_input_tokens"),
@@ -118,7 +118,7 @@ def process(lf: pl.LazyFrame) -> pl.LazyFrame:
         ),
     )
 
-    # ── Tool-level aggregations (from tool_spans) ─────────────────────────────────
+    # ── Tool-level aggregations (from tool_spans) ────────────────────────────────────
 
     # Per-turn tool counts (needed for parallel / avg metrics)
     tool_calls_per_turn = tool_spans.group_by(["process_pid", "trace_id"]).agg(
@@ -167,27 +167,18 @@ def process(lf: pl.LazyFrame) -> pl.LazyFrame:
         .agg(pl.col("consecutive_count").max())
     )
 
-    # null tool responses
-    null_tool_responses_agg = tool_spans.group_by("process_pid").agg(
-        pl.col("message").is_null().sum().alias("null_tool_responses")
-    )
-
-    # ── Join to final lazyframe ───────────────────────────────────────────────────
-
-    null_tool_responses_agg.explain()
+    # ── Join to final lazyframe ──────────────────────────────────────────────────────
 
     run_logs_agg = (
         base_agg.join(token_agg, on="process_pid", how="left")
         .join(parallel_and_avg_agg, on="process_pid", how="left")
         .join(tool_order_agg, on="process_pid", how="left")
-        .join(null_tool_responses_agg, on="process_pid", how="left")
-        .collect()
     )
 
     return run_logs_agg
 
 
-# ── Process each file and save to parquet in data/processed/ ------------------
+# ── Process each file and save to parquet in data/processed/ -------------------------
 for path in to_process:
     output_path = processed_dir / f"{path.stem}_processed.parquet"
     lf = pl.scan_parquet(path)

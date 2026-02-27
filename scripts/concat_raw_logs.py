@@ -5,7 +5,7 @@ import polars as pl
 
 interim_dir = Path("data/interim")
 
-# Current date and time is a easy way to give a unique name to the files
+# Current date and time is an easy way to give a unique name to the files
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 output_path = interim_dir / f"concat_{timestamp}.parquet"
 
