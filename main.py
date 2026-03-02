@@ -11,8 +11,10 @@ from src.agents import (
     supervisor_agent,
 )
 
+""" logfire is set up in the kaggle notebook
 logfire.configure()
 logfire.instrument_pydantic_ai()
+"""
 
 
 async def run_investigation(user_query: str):
