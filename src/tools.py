@@ -16,7 +16,7 @@ class SupervisorContext(BaseModel):
 
 async def process_info(ctx: RunContext[SupervisorContext]) -> str:
     """Process the last response of the researcher. Return information passed processed and synthetized"""
-    from agents import process_agent
+    from src.agents import process_agent
 
     print("🟣")
     r = await process_agent.run(

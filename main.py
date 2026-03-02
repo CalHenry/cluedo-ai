@@ -1,4 +1,5 @@
 import asyncio
+import os
 from typing import cast
 
 import logfire
@@ -11,10 +12,8 @@ from src.agents import (
     supervisor_agent,
 )
 
-""" logfire is set up in the kaggle notebook
-logfire.configure()
+logfire.configure(token=os.environ["LOGFIRE_WRITE_TOKEN"])
 logfire.instrument_pydantic_ai()
-"""
 
 
 async def run_investigation(user_query: str):

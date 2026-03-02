@@ -98,10 +98,11 @@ supervisor_agent = Agent(
     deps_type=SupervisorContext,
     output_type=SupervisorDecision,
     tools=[validate_solution, get_tool_list, process_info],
+    model_settings={"temperature": 0.0},
 )
 
 research_model = OpenAIChatModel(
-    model_name="lfm2.5-1.2b-instruct-mlx",
+    model_name="lfm2.5-1.2b-instruct",
     provider=OpenAIProvider(
         base_url="http://127.0.0.1:1234/v1",
     ),
@@ -135,7 +136,7 @@ research_agent = Agent(
 )
 # Processing Agent - transforms and processes data
 process_model = OpenAIChatModel(
-    model_name="lfm2.5-1.2b-instruct-mlx",
+    model_name="lfm2.5-1.2b-instruct",
     provider=OpenAIProvider(
         base_url="http://127.0.0.1:1234/v1",
     ),
