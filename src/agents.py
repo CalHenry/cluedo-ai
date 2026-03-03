@@ -99,6 +99,7 @@ supervisor_agent = Agent(
     output_type=SupervisorDecision,
     tools=[validate_solution, get_tool_list, process_info],
     model_settings={"temperature": 0.0},
+    retries=3,  # nescessary for the GGUF model because it very often fails to respond with the correct structured output
 )
 
 research_model = OpenAIChatModel(
