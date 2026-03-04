@@ -10,6 +10,8 @@ The design is simple:
 - 3 agents: 1 supervisor, 1 researcher, 1 processor
 - a limited set of tools
 
+## Agentic workflow
+
 ### Stack
 - I use a MLX model for better performance on my mac when running the agents.
 - [pydantic-ai](https://ai.pydantic.dev/) for the agentic framework and [Pydantic's Logfire](https://docs.pydantic.dev/latest/integrations/logfire/) to inspect every interaction between the agents.
@@ -51,7 +53,6 @@ All the other tools are for the researcher to use and are simple functions that 
 - get_timeline_entry(time_slot) <br>
 - check_fingerprints(object_name) <br>
 - verify_alibi(suspect_name, time_slot) <br>
-- process_information() (processor agent) <br> 
 </details>
 
 ### Agents and model:
@@ -73,11 +74,9 @@ The processor was previously a standalone agent like the researcher is, but I ha
 To solve this i included the processor agent inside a tool available to the supervisor only.
 
 ### Current state of the project:
-The game works, the agents interact with each other but don't solve the case yet. I consider to have reached my goal:
+The game works, the agents interact with each other and solves the games most of the times. Sometimes they fail to catch the murdered after the 15 turns, rarelly the game fails.
 - I got a playground for ai to interact with each others.  
-- I don't really manage and built the context, currently it's just under a variable 'supervisor_memory' and I never interact with it
-- a run takes ~2 minutes
-- the agents are sometimes successful. They are often close to the right answer (2/3 correct)
+- a run takes between 5 and 10 minutes
 
 ### Personal observations:
 
@@ -87,8 +86,8 @@ The game works, the agents interact with each other but don't solve the case yet
 - Using AI to create the fake reports for the game was very handy
 
 ### Explore recorded runs 
-In the folder 'run_examples', you can see the logfire logs of a few runs (configured by 'logfire.configure()' line 14 in main.py).  
-I capture this content using the following command:
+In the folder 'run_examples', you can see the logs of a few runs (configured by 'logfire.configure()' line 14 in main.py).  
+Captured with:
 ```sh
 uv run main.py | tee output.txt # time uv run main.py to see the exec time
 ```
