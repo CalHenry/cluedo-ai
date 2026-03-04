@@ -93,6 +93,21 @@ uv run main.py | tee output.txt # time uv run main.py to see the exec time
 ```
 I added circles emojis to easily see when the researcher (🔵) or the processor (🟣) are used by the supervisor.
 
+## Logs
+- Logs of the runs are sent to Pydantic Logfire
+- Logs folder contains 3 scripts to
+  - Collect logs from Logfire
+  - Concate any files into a single parquet file, making sure we get rid of duplicates
+  - Process the logs using Polars, aggregating the information at the run level (final dataset has 1 row per run)
+  
+What can we do with the logs ?
+
+### Anomaly detection
+We can use the logs to train a machine learning model to detect anamolies during the run, to potentially act early on faillin runs.  
+XGBoost is a great choice for this: we have tabular data, the model has proven to be effective in anomaly detection.
+
+Second dimension 
+
 ## Try it out yourself
 
 ### Requirements
