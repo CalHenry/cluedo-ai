@@ -4,7 +4,7 @@ from typing import cast
 import logfire
 from pydantic_ai import usage
 
-from agents import (
+from src.agents import (
     SupervisorContext,
     SupervisorDecision,
     research_agent,
@@ -26,7 +26,7 @@ async def run_investigation(user_query: str):
 
     while attempts < max_attempts:
         attempts += 1
-        print(f"\n--- Attempt {attempts}/{max_attempts} ---")
+        print(f"\n--- Turn {attempts}/{max_attempts} ---")
 
         # supervisor
         supervisor_response = await supervisor_agent.run(

@@ -4,7 +4,7 @@ import random
 from pydantic import BaseModel
 from pydantic_ai.agent import RunContext
 
-from game_engine import CluedoGameEngine
+from src.game_engine import CluedoGameEngine
 
 game_engine = CluedoGameEngine(seed=42)
 scenario = game_engine.generate_scenario()

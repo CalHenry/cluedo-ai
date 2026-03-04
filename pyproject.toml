@@ -10,5 +10,8 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "logfire>=4.19.0",
+    "marimo>=0.19.11",
+    "polars>=1.38.1",
     "pydantic-ai-slim[openai]>=1.46.0",
+    "python-dotenv>=1.2.1",
 ]

@@ -6,11 +6,14 @@ dist/
 wheels/
 *.egg-info
 
+# secrets
+.env
+
 # Virtual environments
 .venv
 
 
 working_examples_scripts/
-
+*.csv
 # apple specific
 .DS_Store

@@ -5,7 +5,7 @@ from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
-from tools import (
+from src.tools import (
     SupervisorContext,
     check_fingerprints,
     get_crime_scene_details,
@@ -57,6 +57,7 @@ class SupervisorDecision(BaseModel):
 
 supervisor_agent = Agent(
     supervisor_model,
+    name="supervisor",
     system_prompt="""SUPERVISOR - Cluedo Investigation
 
     You must respond in this format:
@@ -108,6 +109,7 @@ research_model = OpenAIChatModel(
 
 research_agent = Agent(
     research_model,
+    name="researcher",
     system_prompt="""You are a research agent that executes exact instructions.
     STRICT RULES:
     1. Do ONLY what the supervisor explicitly requests
@@ -141,6 +143,7 @@ process_model = OpenAIChatModel(
 
 process_agent = Agent(
     process_model,
+    name="processor",
     system_prompt="""Process the information passed to you.
     Synthetize it, highlight the most important point.
     Keep it concise
