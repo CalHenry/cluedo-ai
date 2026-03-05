@@ -143,7 +143,7 @@ def process(lf: pl.LazyFrame) -> pl.LazyFrame:
     # - Part2 '.group_by("process_pid", "group").agg(...)':
     #  count how many time a group from part1 is present for each 'process_pid'. By 'process_pid', we have how many consecutive tool call for each unique tool_call
     # - Part3 '.group_by("process_pid").agg(...)':
-    # By 'process_pid', get the bigger 'consecutive_run', which is for this 'process_pid', the most consecutive tool called.
+    # By 'process_pid', get the bigger 'consecutive_run', which is the most consecutive tool called for this 'process_pid',.
     tool_order_agg = (
         tool_spans.sort("start_timestamp")
         .with_row_index()
@@ -166,12 +166,31 @@ def process(lf: pl.LazyFrame) -> pl.LazyFrame:
         .agg(pl.col("consecutive_count").max())
     )
 
+    # Derived features
+    eps = 1e-9  # avoid division by zero
+
+    derived_features = (
+        (pl.col("total_tool_calls") / (pl.col("total_turns") + eps))
+        .round(2)
+        .alias("tool_calls_per_turn"),
+        (pl.col("total_tokens") / (pl.col("total_tool_calls") + eps))
+        .round(2)
+        .alias("tokens_per_tool_call"),
+        (pl.col("total_output_tokens") / (pl.col("total_input_tokens") + eps))
+        .round(2)
+        .alias("output_input_ratio"),
+        (pl.col("tool_error_rate") * pl.col("consecutive_count"))
+        .round(2)
+        .alias("error_x_consecutive"),
+    )
+
     # ── Join to final lazyframe ──────────────────────────────────────────────────────
 
     run_logs_agg = (
         base_agg.join(token_agg, on="process_pid", how="left")
         .join(parallel_and_avg_agg, on="process_pid", how="left")
         .join(tool_order_agg, on="process_pid", how="left")
+        .with_columns(derived_features)
     )
 
     return run_logs_agg
