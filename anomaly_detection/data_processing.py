@@ -11,8 +11,17 @@ lf = pl.scan_parquet(
 
 
 def preprocess(lf: pl.LazyFrame) -> tuple[np.ndarray, list]:
-    """"""
-    # --- Fill nulls - we only have int and bool
+    """
+    Prepare the variables from the aggregated log dataset for Isolation Forest model.
+    - Fill any nulls (we only have int and bool variables)
+    - Convert Boolean variables to Integer
+    - Remove the ID var (process_pid)
+
+    Return:
+        X_scaled: numpy array of the features
+        features_cols: list of the features name
+    """
+    # --- Fill nulls
     lf = lf.with_columns(
         cs.numeric().fill_null(
             cs.numeric().mean().over("process_pid")
@@ -20,8 +29,11 @@ def preprocess(lf: pl.LazyFrame) -> tuple[np.ndarray, list]:
         cs.boolean().fill_null(False),
     )
 
-    # remove id var
-    df_clean = lf.drop("process_pis").collect()
+    # --- Bool vars to Int
+    lf = lf.cast({cs.Boolean(): pl.Int32})
+
+    # --- Remove id var
+    df_clean = lf.drop("process_pid").collect()
 
     # --- Convert to numpy and StandardScaler
     feature_cols = df_clean.columns
@@ -31,11 +43,5 @@ def preprocess(lf: pl.LazyFrame) -> tuple[np.ndarray, list]:
     X_scaled = scaler.fit_transform(X)
 
     print(f"Scaled {X_scaled.shape[1]} features, {X_scaled.shape[0]} samples\n")
+
     return X_scaled, feature_cols
-
-
-X_scaled, feature_cols = preprocess(lf)
-
-print(X_scaled)
-print("----")
-print(feature_cols)
