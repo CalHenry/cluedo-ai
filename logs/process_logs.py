@@ -37,6 +37,7 @@ def process(lf: pl.LazyFrame) -> pl.LazyFrame:
     Args:
         lf: input LazyFrame - should be concat log data in parquet format
     """
+
     # ── Intermediate lazy frames ─────────────────────────────────────────────────────
     # Last span per turn (trace_id): used for token accounting.
     last_span_per_turn = (
@@ -197,8 +198,25 @@ def process(lf: pl.LazyFrame) -> pl.LazyFrame:
 
 
 # ── Process each file and save to parquet in data/processed/ -------------------------
+lf_schema = (
+    pl.col("process_pid").cast(pl.Int32),
+    pl.col("start_timestamp").cast(pl.String),
+    pl.col("end_timestamp").cast(pl.String),
+    pl.col("duration").cast(pl.Float32),
+    pl.col("trace_id").cast(pl.String),
+    pl.col("span_id").cast(pl.String),
+    pl.col("kind").cast(pl.String),
+    pl.col("span_name").cast(pl.String),
+    pl.col("otel_status_code").cast(pl.String),
+    pl.col("message").cast(pl.String),
+    pl.col("input_tokens").cast(pl.Int32),
+    pl.col("output_tokens").cast(pl.Int32),
+    pl.col("finish_reason").cast(pl.String),
+    pl.col("attribute_messages").cast(pl.String),
+)
+
 for path in to_process:
     output_path = processed_dir / f"{path.stem}_processed.parquet"
-    lf = pl.scan_parquet(path)
+    lf = pl.scan_parquet(path).with_columns(lf_schema)
     processed_lf = process(lf)
     processed_lf.sink_parquet(output_path)

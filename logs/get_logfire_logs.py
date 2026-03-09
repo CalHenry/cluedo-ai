@@ -1,6 +1,6 @@
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import logfire.db_api
 import polars as pl
@@ -29,15 +29,6 @@ SELECT process_pid,
     attributes->>'gen_ai.input.messages' as attribute_messages
 FROM records
 ORDER BY start_timestamp DESC
-"""
-"""
-df = pl.read_database(query, conn)
-
-datetime_today = datetime.now().strftime("%Y-%m-%d")
-
-df.write_parquet(f"logs/data/raw/log_{datetime_today}.parquet")
-
-conn.close()
 """
 
 # Paginate through all results
