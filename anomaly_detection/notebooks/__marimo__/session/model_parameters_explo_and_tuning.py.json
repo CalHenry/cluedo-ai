@@ -1,0 +1,59 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.19.11"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "988822fbbf961b0930d26fc8e5a8ddb8",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "No module named 'anomaly_detection'",
+          "traceback": []
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">&quot;/var/folders/zw/nklgtqvx7c7dqp840mw14_2m0000gn/T/marimo_70256/__marimo__cell_Hbol_.py&quot;</span>, line <span class=\"m\">8</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"kn\">from</span><span class=\"w\"> </span><span class=\"nn\">anomaly_detection.data_processing</span><span class=\"w\"> </span><span class=\"kn\">import</span> <span class=\"n\">preprocess</span>\n<span class=\"gr\">ModuleNotFoundError</span>: <span class=\"n\">No module named &#39;anomaly_detection&#39;</span>\n</pre></div>\n</span>",
+          "mimetype": "application/vnd.marimo+traceback"
+        }
+      ]
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "55a88604a37a58c06d22342f148d20dd",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"unsupervised-learning-model\">Unsupervised learning model</h1>\n<span class=\"paragraph\">Isolation Forest hyperparameters:</span>\n<div class=\"language-scdoc highlight\"><pre><span></span><code><span class=\"k\">-</span> n_estimators\n</code></pre></div></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "6d9482007d2178af52df2a3681604f0f",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "a7742e7996aebb6e0527d43363341af3",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "3e1327fd69f544e87f0a6190a3e34716",
+      "outputs": [],
+      "console": []
+    }
+  ]
+}
